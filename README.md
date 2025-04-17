@@ -1,7 +1,7 @@
 # CopilotKit X Blaxel - Trip Booking Agent
 
 <p align="center">
-  <img src="https://blaxel.ai/logo.png" alt="Blaxel Trip Booking Agent"/>
+  <img src=".github/banner.png" alt="Blaxel Trip Booking Agent"/>
 </p>
 
 A multi‑agent conversational assistant for booking flights and hotels, built with LangGraph, CrewAI, and the Blaxel platform. It orchestrates specialized sub‑agents and integrates web scraping, search, and summarization tools for end‑to‑end trip booking workflows.
