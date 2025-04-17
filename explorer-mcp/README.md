@@ -1,10 +1,14 @@
-# Template MCP Hello World Python
+# Explorer-MCP Flight Data Service
 
-A template implementation of a MCP Hello World Python.
+A microservice providing flight data tools for the Trip Booking Agent.
+
+This service exposes two MCP tools:
+- `browserbase(url)`: loads a URL via a headless browser (Browserbase) and returns text content.
+- `kayak(departure, destination, date[, return_date])`: generates a Kayak flight search URL.
 
 ## Prerequisites
 
-- **Python:** 3.12 or later.
+- **Python:** 3.10 or later.
 - **[UV](https://github.com/astral-sh/uv):** An extremely fast Python package and project manager, written in Rust.
 - **[Blaxel CLI](https://docs.blaxel.ai/Get-started):** Ensure you have the Blaxel CLI installed. If not, install it globally:
   ```bash
@@ -14,46 +18,49 @@ A template implementation of a MCP Hello World Python.
   ```bash
     bl login YOUR-WORKSPACE
   ```
-  
-- Optional - **NodeJS:** 20.11.0 or later. We use a npm package for the hot reload feature "bl serve --hotrealod".
+
+**Environment Variable:** Create a `.env` file in this directory and set:
+```bash
+# Your Browserbase API key for headless browsing
+BROWSERBASE_API_KEY=your_api_key_here
+```
 
 ## Installation
 
-- **Clone the repository and install the dependencies**:
-
-  ```bash
-  git clone https://github.com/beamlit/template-mcp-helloworld-python.git
-  cd template-mcp-helloworld-python
-  uv sync
-  ```
-
-## Running the Server Locally
-
-Start the development server with hot reloading using the Blaxel CLI command:
+Install dependencies for this service (from the root or this directory):
 
 ```bash
-bl serve --hotrealod
+uv sync
 ```
 
-_Note:_ This command starts the server and enables hot reload so that changes to the source code are automatically reflected.
+## Running Locally
 
-## Testing your agent
-
-This command allow you to launch MCP inspector locally, which help a lot for debug through the UI.
+Start the MCP service in development mode with the inspector:
 
 ```bash
 BL_DEBUG=true uv run mcp dev src/server.py
 ```
 
-## Deploying to Blaxel
+_Note:_ The MCP inspector UI will be available at http://localhost:16888 for interactive tool testing.
 
-When you are ready to deploy your application, run:
+## Testing
 
-```bash
-bl deploy
+When running in debug mode, use the inspector UI to invoke and inspect tools.
+
+```
+# Inspector is already started via the Running Locally step
 ```
 
-This command uses your code and the configuration files under the `.blaxel` directory to deploy your application.
+## Deploying to Blaxel
+
+To deploy this service only, run:
+
+```bash
+cd explorer-mcp
+bl deploy --recursive=false
+```
+
+This will publish the MCP service to your Blaxel workspace.
 
 ## License
 

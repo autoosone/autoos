@@ -1,18 +1,20 @@
-# Blaxel Langgraph Agent
+# CopilotKit X Blaxel - Trip Booking Agent
 
 <p align="center">
-  <img src="https://blaxel.ai/logo.png" alt="Blaxel"/>
+  <img src="https://blaxel.ai/logo.png" alt="Blaxel Trip Booking Agent"/>
 </p>
 
-A template implementation of a conversational agent using LangGraph and GPT-4. This agent demonstrates the power of LangGraph for building interactive AI agents with tool integration capabilities.
+A multi‑agent conversational assistant for booking flights and hotels, built with LangGraph, CrewAI, and the Blaxel platform. It orchestrates specialized sub‑agents and integrates web scraping, search, and summarization tools for end‑to‑end trip booking workflows.
+Blaxel integrates seamlessly with CopilotKit, allowing you to deploy sophisticated AI agents to your customers within seconds. This powerful combination enables rapid delivery of conversational assistants with minimal setup time.
 
 ## Features
 
-- Interactive conversational interface
-- Tool integration support (including weather and search capabilities)
-- Streaming responses for real-time interaction
-- Built on LangGraph for efficient agent orchestration
-- Easy deployment and integration with Blaxel platform
+- Supervisor agent to delegate booking tasks
+- Flight Agent (CrewAI) for flight search and provider lookup
+- Hotel Agent (LangGraph REACT) for hotel search and Q&A
+- Explorer‑MCP microservice for scraping and URL generation
+- Streaming responses via CopilotKit endpoint
+- Easily deployable to Blaxel Platform
 
 ## Prerequisites
 
@@ -26,6 +28,12 @@ A template implementation of a conversational agent using LangGraph and GPT-4. T
   ```bash
   bl login YOUR-WORKSPACE
   ```
+- **Browserbase API KEY** [Settings](https://www.browserbase.com/settings)
+  Create a `.env` file in directory explorer-mcp and set:
+  ```bash
+  # Your Browserbase API key for headless browsing
+  BROWSERBASE_API_KEY=your_api_key_here
+  ```
 
 ## Installation
 
@@ -37,9 +45,9 @@ cd template-langgraph-py
 uv sync
 ```
 
-## Running the Server Locally
+## Running the Root Service Locally
 
-Start the development server with hot reloading:
+Start the root supervisor service with hot reloading:
 
 ```bash
 bl serve --hotreload
@@ -47,9 +55,18 @@ bl serve --hotreload
 
 _Note:_ This command starts the server and enables hot reload so that changes to the source code are automatically reflected.
 
-## Testing your agent
+## Running the Explorer-MCP Microservice
 
-You can test your agent using the chat interface:
+In a separate terminal, start the flight data service for scraping and URL tools:
+
+```bash
+cd explorer-mcp
+BL_DEBUG=true uv run mcp dev src/server.py
+```
+
+## Testing the Agent
+
+You can test the booking assistant using the chat interface:
 
 ```bash
 bl chat --local blaxel-agent

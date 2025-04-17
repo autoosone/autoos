@@ -1,8 +1,5 @@
-name = "mcp-helloworld-python"
+name = "explorer-mcp"
 type = "function"
-
-[env]
-BROWSERBASE_API_KEY = "$secrets.BROWSERBASE_API_KEY"
 
 [entrypoint]
 prod = ".venv/bin/python3 src/server.py"

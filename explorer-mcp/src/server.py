@@ -1,42 +1,45 @@
+import asyncio
+import os
 from logging import getLogger
-from time import sleep
 from typing import Annotated, Optional
 
 from blaxel import env
 from blaxel.mcp.server import FastMCP
 from html2text import html2text
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 mcp = FastMCP("mcp-flight")
 logger = getLogger(__name__)
 
+if not os.getenv("BROWSERBASE_API_KEY"):
+    raise ValueError("BROWSERBASE_API_KEY is not set")
+
 @mcp.tool()
-def browserbase(
+async def browserbase(
     url: Annotated[
         str,
         "The URL to load",
     ],
 ) -> str:
     """Loads a URL using a headless webbrowser"""
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.connect_over_cdp(
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(
             "wss://connect.browserbase.com?apiKey="
             + env["BROWSERBASE_API_KEY"]
         )
         context = browser.contexts[0]
         page = context.pages[0]
-        page.goto(url)
-
+        await page.goto(url)
         # Wait for the flight search to finish
-        sleep(25)
+        await asyncio.sleep(5)
 
-        content = html2text(page.content())
-        browser.close()
+        content = html2text(await page.content())
+        await browser.close()
         return content
 
 
 @mcp.tool()
-def kayak(
+async def kayak(
     departure: Annotated[
         str,
         "The departure city",
