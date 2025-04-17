@@ -1,0 +1,13 @@
+type = "agent"
+
+functions = ["all"]
+models = ["sandbox-openai"]
+agents = ["crew-flight-agent"]
+
+[entrypoint]
+prod = ".venv/bin/python3 -m src"
+dev = "uv run uvicorn src.main:app --reload --port 1338 --host 0.0.0.0 --loop asyncio"
+
+[function.explorer-mcp]
+path = "explorer-mcp"
+port = 1339

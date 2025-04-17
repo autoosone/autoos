@@ -1,0 +1,9 @@
+name = "mcp-helloworld-python"
+type = "function"
+
+[env]
+BROWSERBASE_API_KEY = "$secrets.BROWSERBASE_API_KEY"
+
+[entrypoint]
+prod = ".venv/bin/python3 src/server.py"
+dev = "npx nodemon --exec uv run python src/server.py"

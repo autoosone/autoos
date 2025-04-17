@@ -1,0 +1,13 @@
+[project]
+name = "template-mcp-helloworld-python"
+version = "0.1.5"
+description = ""
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "blaxel==0.1.5",
+    "fastmcp>=0.4.1",
+    "html2text>=2025.4.15",
+    "mcp[cli]>=1.6.0",
+    "playwright>=1.51.0",
+]
