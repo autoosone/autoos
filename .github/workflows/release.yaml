@@ -12,8 +12,8 @@ jobs:
     uses: blaxel-templates/workflows/.github/workflows/release.yaml@main
     with:
       api_url: ${{github.ref_name == 'main' && vars.BL_API_URL_PROD || vars.BL_API_URL_DEV }}
-      api_username: ${{github.ref_name == 'main' && secrets.BL_ADMIN_USERNAME_PROD || secrets.BL_ADMIN_USERNAME_DEV }}
+      api_username: ${{ github.ref_name == 'main' && secrets.BL_ADMIN_USERNAME_PROD || secrets.BL_ADMIN_USERNAME_DEV }}
       repository: ${{ github.repository }}
       sha: ${{ github.sha }}
     secrets:
-      api_password: ${{github.ref_name == 'main' && secrets.BL_ADMIN_PASSWORD_PROD || secrets.BL_ADMIN_PASSWORD_DEV }}
+      api_password: ${{ github.ref_name == 'main' && secrets.BL_ADMIN_PASSWORD_PROD || secrets.BL_ADMIN_PASSWORD_DEV }}
