@@ -15,5 +15,4 @@ jobs:
       api_username: ${{ github.ref_name == 'main' && secrets.BL_ADMIN_USERNAME_PROD || secrets.BL_ADMIN_USERNAME_DEV }}
       repository: ${{ github.repository }}
       sha: ${{ github.sha }}
-    secrets:
       api_password: ${{ github.ref_name == 'main' && secrets.BL_ADMIN_PASSWORD_PROD || secrets.BL_ADMIN_PASSWORD_DEV }}
