@@ -6,9 +6,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "asgi-correlation-id>=4.3.4",
-    "blaxel[langchain,crewai]>=0.1.8",
-    "copilotkit>=0.1.44",
-    "crewai==0.102.0",
+    "blaxel[langchain,crewai]>=0.1.16",
+    "copilotkit>=0.1.46",
+    "crewai>=0.102.0",
     "fastapi[standard]>=0.115.12",
     "langgraph-supervisor>=0.0.4",
     "nest-asyncio>=1.6.0",
