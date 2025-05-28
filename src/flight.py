@@ -94,7 +94,6 @@ async def agent():
         tasks=[search_task, search_booking_providers_task],
         max_rpm=100,  # Maximum requests per minute
         verbose=True,  # Enable verbose output
-        planning=True  # Enable planning mode
     )
 
     # Execute the crew workflow and yield results

@@ -3,7 +3,6 @@ import os
 from logging import getLogger
 from typing import Annotated, Optional
 
-from blaxel import env
 from blaxel.mcp.server import FastMCP
 from html2text import html2text
 from playwright.async_api import async_playwright
@@ -25,7 +24,7 @@ async def browserbase(
     async with async_playwright() as playwright:
         browser = await playwright.chromium.connect_over_cdp(
             "wss://connect.browserbase.com?apiKey="
-            + env["BROWSERBASE_API_KEY"]
+            + os.getenv("BROWSERBASE_API_KEY")
         )
         context = browser.contexts[0]
         page = context.pages[0]
@@ -65,5 +64,5 @@ async def kayak(
     URL += "?currency=USD"
     return URL
 
-if not env["BL_DEBUG"]:
+if not os.getenv("BL_DEBUG"):
     mcp.run(transport="ws")
