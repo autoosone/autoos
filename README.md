@@ -66,16 +66,10 @@ BL_DEBUG=true uv run mcp dev src/server.py
 
 ## Testing the Agent
 
-You can test the booking assistant using the chat interface:
-
 ```bash
-bl chat --local blaxel-agent
-```
+# Check your agents are registered correctly
+bl run agent blaxel-agent --local --path /copilotkit
 
-Or run it directly with specific input:
-
-```bash
-bl run agent blaxel-agent --local --data '{"input": "What is the weather in Paris?"}'
 ```
 
 ## Deploying to Blaxel
