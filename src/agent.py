@@ -2,9 +2,7 @@ from datetime import datetime
 from logging import getLogger
 from typing import Annotated, TypedDict
 
-from blaxel.agents import bl_agent
-from blaxel.models import bl_model
-from langchain.load.dump import dumps
+from blaxel.crewai import bl_model
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
@@ -16,8 +14,10 @@ from .hotel import agent as hotel_agent
 
 logger = getLogger(__name__)
 
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
+
 
 def flight_agent_graph():
     async def handle_flight(state: State) -> State:
@@ -26,7 +26,9 @@ def flight_agent_graph():
             "request": state["messages"][-1].content,
             "current_year": datetime.now().year,
         }
-        result = crew.kickoff(inputs=inputs,)
+        result = crew.kickoff(
+            inputs=inputs,
+        )
         state["messages"].append(AIMessage(content=result.raw))
         return state
 
@@ -35,7 +37,6 @@ def flight_agent_graph():
     graph.set_entry_point("flight_agent")
     graph.add_edge("flight_agent", END)
     return graph.compile(name="flight_agent")
-
 
 
 async def agent():
@@ -54,5 +55,7 @@ async def agent():
         """,
     )
 
-    agent = supervisor_graph.compile(name="supervisor-agent", checkpointer=MemorySaver())
+    agent = supervisor_graph.compile(
+        name="supervisor-agent", checkpointer=MemorySaver()
+    )
     return agent

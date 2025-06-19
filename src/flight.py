@@ -10,8 +10,7 @@ import nest_asyncio
 
 nest_asyncio.apply()
 
-from blaxel.models import bl_model
-from blaxel.tools import bl_tools
+from blaxel.crewai import bl_model, bl_tools
 from crewai import Agent, Crew, Task
 
 
@@ -32,8 +31,8 @@ async def agent():
     4. Executes the crew workflow and yields the results
     """
     # Initialize tools and model for the agents
-    tools = await bl_tools(["explorer-mcp"]).to_crewai()
-    model = await bl_model("sandbox-openai").to_crewai()
+    tools = await bl_tools(["explorer-mcp"])
+    model = await bl_model("sandbox-openai")
 
     # Create the flight search agent
     flights_agent = Agent(

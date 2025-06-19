@@ -1,10 +1,13 @@
-from blaxel.models import bl_model
-from blaxel.tools import bl_tools
+from blaxel.langchain import bl_model, bl_tools
 from langgraph.prebuilt import create_react_agent
 
 
 async def agent():
-    prompt = "You are a helpful assistant that can answer questions and help with tasks."
-    tools = await bl_tools(["explorer-mcp"]).to_langchain()
-    model = await bl_model("sandbox-openai").to_langchain()
-    return create_react_agent(name="hotel-agent", model=model, tools=tools, prompt=prompt)
+    prompt = (
+        "You are a helpful assistant that can answer questions and help with tasks."
+    )
+    tools = await bl_tools(["explorer-mcp"])
+    model = await bl_model("sandbox-openai")
+    return create_react_agent(
+        name="hotel-agent", model=model, tools=tools, prompt=prompt
+    )
