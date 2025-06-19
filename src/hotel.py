@@ -1,4 +1,4 @@
-from blaxel.langchain import bl_model, bl_tools
+from blaxel.langgraph import bl_model, bl_tools
 from langgraph.prebuilt import create_react_agent
 
 

@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Error during startup: {str(e)}", exc_info=True)
         raise
 
+
 # Create the SDK after the graph is initialized
 async def get_sdk():
     supervisor = await agent()
@@ -44,24 +45,14 @@ async def get_sdk():
     sdk = CopilotKitRemoteEndpoint(
         agents=[
             LangGraphAgent(
-                name="supervisor",
-                description="Book a trip",
-                graph=supervisor
+                name="supervisor", description="Book a trip", graph=supervisor
             ),
-            LangGraphAgent(
-                name="hotel-agent",
-                description="Book a hotel",
-                graph=hotel
-            ),
-            CrewAIAgent(
-                name="flight-agent",
-                description="Book a flight",
-                crew=flight
-            )
-
+            LangGraphAgent(name="hotel-agent", description="Book a hotel", graph=hotel),
+            CrewAIAgent(name="flight-agent", description="Book a flight", crew=flight),
         ],
     )
     return sdk
+
 
 app = FastAPI(lifespan=lifespan)
 init_error_handlers(app)

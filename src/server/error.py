@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
+
 def init_error_handlers(app: FastAPI):
     @app.exception_handler(Exception)
     async def exception_handler(request: Request, e: Exception):
