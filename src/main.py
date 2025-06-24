@@ -58,4 +58,4 @@ app = FastAPI(lifespan=lifespan)
 init_error_handlers(app)
 init_middleware(app)
 
-FastAPIInstrumentor.instrument_app(app)
+FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
