@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaxel Agent Interface - CORS Fixed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.connecting {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .success-banner {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-banner h2 {
+            margin-bottom: 10px;
+        }
+
+        .endpoint-selector {
+            margin-bottom: 20px;
+        }
+
+        .endpoint-selector label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .endpoint-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .test-button {
+            padding: 10px;
+            background: #f3f4f6;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .test-button:hover {
+            background: #e5e7eb;
+        }
+
+        .response-container {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-header {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .response {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .response.error {
+            border-left-color: #ef4444;
+            background: #fee;
+        }
+
+        .response.success {
+            border-left-color: #10b981;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .response-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .api-info {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .api-info h3 {
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .api-info code {
+            background: #dbeafe;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Blaxel Agent Interface (CORS Fixed)</h1>
+        <span id="status" class="status connecting">Initializing...</span>
+
+        <div class="success-banner" id="successBanner" style="display: none;">
+            <h2>✅ 100% Working!</h2>
+            <p>CORS issues resolved - Using proxy server</p>
+        </div>
+
+        <div class="api-info">
+            <h3>📡 Configuration</h3>
+            <div>
+                <strong>Mode:</strong> <code>Proxy Server (No CORS)</code><br>
+                <strong>API Key:</strong> <code>bl_47yrrlxn6geic2wq9asrv5rapygyycj7</code><br>
+                <strong>Status:</strong> <code id="apiStatus">Checking...</code>
+            </div>
+        </div>
+
+        <div class="endpoint-selector">
+            <label for="endpoint">Select Endpoint:</label>
+            <select id="endpoint">
+                <option value="/api/agent">Main Agent (via Proxy)</option>
+                <option value="/api/copilotkit">CopilotKit (via Proxy)</option>
+            </select>
+        </div>
+
+        <div class="test-buttons">
+            <button class="test-button" onclick="runTest('health')">🔍 Health Check</button>
+            <button class="test-button" onclick="runTest('hello')">👋 Say Hello</button>
+            <button class="test-button" onclick="runTest('flight')">✈️ Book Flight</button>
+            <button class="test-button" onclick="runTest('hotel')">🏨 Find Hotel</button>
+            <button class="test-button" onclick="runTest('test')">🧪 Test Connection</button>
+            <button class="test-button" onclick="clearResponses()">🗑️ Clear</button>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" id="sendButton">Send Message</button>
+        </div>
+
+        <div class="response-container">
+            <div class="response-header">📨 Responses:</div>
+            <div id="responses"></div>
+        </div>
+    </div>
+
+    <script>
+        const THREAD_ID = 'thread-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Test connection on load
+        window.onload = async () => {
+            await testConnection();
+            await testProxyServer();
+        };
+
+        async function testProxyServer() {
+            try {
+                const response = await fetch('/test');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('apiStatus').textContent = 'Proxy Server Running';
+                    document.getElementById('apiStatus').style.color = '#10b981';
+                    document.getElementById('successBanner').style.display = 'block';
+                    addResponse('System', 'Proxy server operational: ' + JSON.stringify(data, null, 2), 'success');
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = 'Proxy Server Error';
+                document.getElementById('apiStatus').style.color = '#ef4444';
+            }
+        }
+
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status connecting';
+            statusEl.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch('/api/agent', {
+                    method: 'GET',
+                    headers: {
+                        'X-Thread-Id': THREAD_ID
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.className = 'status connected';
+                    statusEl.textContent = '✅ Connected';
+                    addResponse('System', 'Connected: ' + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Error - Start Proxy Server';
+                addResponse('System', 'Start proxy server: python3 blaxel_proxy_server.py', 'error');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            const button = document.getElementById('sendButton');
+            button.disabled = true;
+            button.textContent = 'Sending...';
+
+            try {
+                const endpoint = document.getElementById('endpoint').value;
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Thread-Id': THREAD_ID
+                    },
+                    body: JSON.stringify({
+                        inputs: message
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResponse('You', message, 'success');
+                    addResponse('Agent', JSON.stringify(data, null, 2), 'success');
+                    input.value = '';
+                } else {
+                    addResponse('Error', JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                addResponse('Error', error.message + '\n\nMake sure proxy server is running:\npython3 blaxel_proxy_server.py', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Send Message';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addResponse(sender, message, type = '') {
+            const responsesEl = document.getElementById('responses');
+            const responseEl = document.createElement('div');
+            responseEl.className = `response ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            responseEl.innerHTML = `
+                <div class="timestamp">${timestamp} - ${sender}</div>
+                <div class="response-content">${message}</div>
+            `;
+            
+            responsesEl.insertBefore(responseEl, responsesEl.firstChild);
+        }
+
+        function clearResponses() {
+            document.getElementById('responses').innerHTML = '';
+            addResponse('System', 'Responses cleared', 'success');
+        }
+
+        async function runTest(testType) {
+            const messages = {
+                'health': 'health check',
+                'hello': 'Hello! How are you today?',
+                'flight': 'I need to book a flight from New York to London',
+                'hotel': 'Find me a hotel in Paris',
+                'test': 'System test message'
+            };
+
+            if (messages[testType]) {
+                document.getElementById('messageInput').value = messages[testType];
+                await sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

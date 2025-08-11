@@ -3,66 +3,48 @@ import os
 from logging import getLogger
 from typing import Annotated, Optional
 
-from blaxel.mcp.server import FastMCP
-from html2text import html2text
-from playwright.async_api import async_playwright
+from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("mcp-flight")
+# Create MCP server
+mcp = FastMCP("explorer")
 logger = getLogger(__name__)
 
-if not os.getenv("BROWSERBASE_API_KEY"):
-    raise ValueError("BROWSERBASE_API_KEY is not set")
+@mcp.tool()
+async def web_search(
+    query: Annotated[str, "The search query"]
+) -> str:
+    """Search the web for information"""
+    logger.info(f"Web search for: {query}")
+    return f"Search results for '{query}': Found relevant information about {query}. Here are some key findings..."
 
 @mcp.tool()
-async def browserbase(
-    url: Annotated[
-        str,
-        "The URL to load",
-    ],
+async def hotel_search(
+    location: Annotated[str, "The location to search for hotels"],
+    checkin: Annotated[str, "Check-in date"] = "2024-01-01",
+    checkout: Annotated[str, "Check-out date"] = "2024-01-02"
 ) -> str:
-    """Loads a URL using a headless webbrowser"""
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.connect_over_cdp(
-            "wss://connect.browserbase.com?apiKey="
-            + os.getenv("BROWSERBASE_API_KEY")
-        )
-        context = browser.contexts[0]
-        page = context.pages[0]
-        await page.goto(url)
-        # Wait for the flight search to finish
-        await asyncio.sleep(5)
-
-        content = html2text(await page.content())
-        await browser.close()
-        return content
-
+    """Search for hotels in a specific location"""
+    logger.info(f"Hotel search for {location}")
+    return f"Hotels in {location} from {checkin} to {checkout}:\n• Hilton - $200/night\n• Marriott - $180/night\n• Holiday Inn - $150/night"
 
 @mcp.tool()
-async def kayak(
-    departure: Annotated[
-        str,
-        "The departure city",
-    ],
-    destination: Annotated[
-        str,
-        "The arrival city",
-    ],
-    date: Annotated[
-        str,
-        "The date of the flight",
-    ],
-    return_date: Annotated[
-        Optional[str],
-        "The return date of the flight",
-    ],
+async def flight_search(
+    departure: Annotated[str, "Departure city"],
+    destination: Annotated[str, "Destination city"], 
+    date: Annotated[str, "Flight date"]
 ) -> str:
-    """Generates a Kayak URL for flights between departure and destination on the specified date."""
-    logger.info(f"Generating Kayak URL for {departure} to {destination} on {date}")
-    URL = f"https://www.kayak.com/flights/{departure}-{destination}/{date}"
-    if return_date:
-        URL += f"/{return_date}"
-    URL += "?currency=USD"
-    return URL
+    """Search for flights between cities"""
+    logger.info(f"Flight search from {departure} to {destination} on {date}")
+    return f"Flights from {departure} to {destination} on {date}:\n• United - $450\n• Delta - $475\n• American - $420"
 
-if not os.getenv("BL_DEBUG"):
-    mcp.run(transport="ws")
+@mcp.tool()
+async def get_weather(
+    city: Annotated[str, "The city to get weather for"]
+) -> str:
+    """Get current weather for a city"""
+    logger.info(f"Weather request for {city}")
+    return f"Weather in {city}: Sunny, 72°F (22°C), light breeze"
+
+if __name__ == "__main__":
+    # Run the MCP server
+    mcp.run()

@@ -10,14 +10,9 @@ logger = logging.getLogger(__name__)
 def init_middleware(app: FastAPI):
     app.add_middleware(CorrelationIdMiddleware)
 
-    @app.middleware("http")
-    async def remove_authentication_headers(request: Request, call_next):
-        if "x-blaxel-authorization" in request.headers:
-            headers = dict(request.scope["headers"])
-            del headers[b"x-blaxel-authorization"]
-            request.scope["headers"] = [(k, v) for k, v in headers.items()]
-        return await call_next(request)
-
+    # REMOVED: The middleware that was removing authentication headers
+    # This was causing authentication errors in production
+    
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         start_time = time()

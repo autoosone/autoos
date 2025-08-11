@@ -1,3 +1,4 @@
+
 import os
 from contextlib import asynccontextmanager
 from logging import getLogger
@@ -48,7 +49,7 @@ async def get_sdk():
                 name="supervisor", description="Book a trip", graph=supervisor
             ),
             LangGraphAgent(name="hotel-agent", description="Book a hotel", graph=hotel),
-            CrewAIAgent(name="flight-agent", description="Book a flight", crew=flight),
+            LangGraphAgent(name="flight-agent", description="Book a flight", graph=flight),
         ],
     )
     return sdk
@@ -58,4 +59,25 @@ app = FastAPI(lifespan=lifespan)
 init_error_handlers(app)
 init_middleware(app)
 
+# Add a simple root endpoint for testing
+@app.get("/")
+async def root():
+    return {"message": "CopilotKit Agent is running", "status": "healthy"}
+
+# Add a POST endpoint that matches the Blaxel agent interface  
+@app.post("/")
+async def agent_endpoint(request: dict):
+    return {"message": "Agent received input", "input": request, "available_endpoints": ["/copilotkit"]}
+
 FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
+
+
+# Add main entry point for proper port binding
+if __name__ == "__main__":
+    import uvicorn
+    
+    # Use Blaxel-injected environment variables
+    host = os.getenv('BL_SERVER_HOST', '0.0.0.0')
+    port = int(os.getenv('BL_SERVER_PORT', 80))
+    
+    uvicorn.run(app, host=host, port=port)

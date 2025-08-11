@@ -2,7 +2,7 @@ from datetime import datetime
 from logging import getLogger
 from typing import Annotated, TypedDict
 
-from blaxel.crewai import bl_model
+from blaxel.langgraph import bl_model
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
@@ -40,7 +40,8 @@ def flight_agent_graph():
 
 
 async def agent():
-    model = await bl_model("sandbox-openai").to_langchain()
+    # Use the correct model that exists in workspace
+    model = await bl_model("sandbox-openai")
     supervisor_graph = create_supervisor(
         [flight_agent_graph(), await hotel_agent()],
         model=model,
@@ -48,14 +49,10 @@ async def agent():
         prompt="""
         You are a supervisor agent that can delegate tasks to other agents.
         You specialized in booking trips. To do so you have access to the following agents:
-        - flight_agent: Book a flight
-        - hotel_agent: Book a hotel
-
-        You can delegate the tasks to both agents if you feel it is necessary.
+        - flight_agent: An agent that can book flights.
+        - hotel_agent: An agent that can book hotels.
         """,
     )
-
-    agent = supervisor_graph.compile(
-        name="supervisor-agent", checkpointer=MemorySaver()
-    )
-    return agent
+    memory = MemorySaver()
+    final_graph = supervisor_graph.compile(checkpointer=memory)
+    return final_graph

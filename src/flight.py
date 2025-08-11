@@ -1,99 +1,60 @@
 """
 Flight Search Agent Module
 
-This module implements an AI-powered flight search system using CrewAI framework.
-It creates a crew of specialized agents to search for flights and provide booking information.
+This module implements a flight search agent using Blaxel LangGraph integration.
 """
 
-# We have to apply nest_asyncio because crewai is not compatible with async
-import nest_asyncio
-
-nest_asyncio.apply()
-
-from blaxel.crewai import bl_model, bl_tools
-from crewai import Agent, Crew, Task
+from blaxel.langgraph import bl_model, bl_tools
+from langgraph.prebuilt import create_react_agent
 
 
+async def flight_agent_graph():
+    """
+    Creates a flight search agent graph using Blaxel + LangGraph.
+    
+    Returns:
+        A LangGraph agent that can help with flight searches using Blaxel tools
+    """
+    prompt = (
+        "You are a helpful flight booking assistant that can help users find and book flights. "
+        "You can search for flights, compare prices, and provide booking recommendations."
+    )
+    
+    try:
+        # Use Blaxel tools for web search and flight APIs
+        tools = await bl_tools(["blaxel-search"])
+    except Exception as e:
+        print(f"⚠️ MCP tools unavailable: {e}")
+        tools = []  # Graceful fallback
+    
+    # Use Blaxel model wrapper for optimized performance
+    model = await bl_model("sandbox-openai")
+    
+    # Fix: Extract the underlying LangChain model for compatibility
+    if hasattr(model, 'wrapped_model'):
+        langchain_model = model.wrapped_model
+    elif hasattr(model, 'model'):
+        langchain_model = model.model
+    elif hasattr(model, '_model'):
+        langchain_model = model._model
+    else:
+        # Fallback: use the model directly
+        langchain_model = model
+    
+    return create_react_agent(
+        name="flight-agent",
+        model=langchain_model, 
+        tools=tools, 
+        prompt=prompt
+    )
+
+
+# Keep the async function for backward compatibility
 async def agent():
     """
-    Main flight search agent function that orchestrates the flight search process.
-
-    Args:
-        input (str): The search query containing flight search criteria
-
-    Yields:
-        str: The search results in a formatted string
-
-    This function:
-    1. Sets up the necessary tools and models
-    2. Creates specialized agents for flight search and summarization
-    3. Defines tasks for searching flights and finding booking providers
-    4. Executes the crew workflow and yields the results
+    Async wrapper for the flight agent.
+    
+    Returns:
+        Flight search agent graph using Blaxel integration
     """
-    # Initialize tools and model for the agents
-    tools = await bl_tools(["explorer-mcp"])
-    model = await bl_model("sandbox-openai")
-
-    # Create the flight search agent
-    flights_agent = Agent(
-        role="Flights",
-        goal="Search flights",
-        backstory="I am an agent that can search for flights.",
-        llm=model,
-        tools=tools,
-        allow_delegation=False,
-    )
-
-    # Create the summarization agent
-    summarize_agent = Agent(
-        role="Summarize",
-        goal="Summarize content",
-        backstory="I am an agent that can summarize text.",
-        llm=model,
-        allow_delegation=False,
-    )
-
-    # Example output format for flight search task
-    output_search_example = """
-    Here are our top 5 flights from San Francisco to New York on 21st September 2024:
-    1. Delta Airlines: Departure: 21:35, Arrival: 03:50, Duration: 6 hours 15 minutes, Price: $125, Details: https://www.kayak.com/flights/sfo/jfk/2024-09-21/12:45/13:55/2:10/delta/airlines/economy/1
-    """
-
-    # Define the flight search task
-    search_task = Task(
-        description=(
-            "Search flights according to criteria {request}. Current year: {current_year}"
-        ),
-        expected_output=output_search_example,
-        agent=flights_agent,
-    )
-
-    # Example output format for booking providers task
-    output_providers_example = """
-    Here are our top 5 picks from San Francisco to New York on 21st September 2024:
-    1. Delta Airlines:
-        - Departure: 21:35
-        - Arrival: 03:50
-        - Duration: 6 hours 15 minutes
-        - Price: $125
-        - Booking: [Delta Airlines](https://www.kayak.com/flights/sfo/jfk/2024-09-21/12:45/13:55/2:10/delta/airlines/economy/1)
-        ...
-    """
-
-    # Define the booking providers search task
-    search_booking_providers_task = Task(
-        description="Load every flight individually and find available booking providers",
-        expected_output=output_providers_example,
-        agent=flights_agent,
-    )
-
-    # Create and configure the crew
-    crew = Crew(
-        agents=[flights_agent, summarize_agent],
-        tasks=[search_task, search_booking_providers_task],
-        max_rpm=100,  # Maximum requests per minute
-        verbose=True,  # Enable verbose output
-    )
-
-    # Execute the crew workflow and yield results
-    return crew
+    return await flight_agent_graph()

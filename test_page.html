@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopilotKit Travel Agent Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .message-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .send-button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .response {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .agent-info {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 CopilotKit Travel Agent Test</h1>
+    
+    <div class="agent-info">
+        <h3>Available Agents:</h3>
+        <ul>
+            <li><strong>supervisor</strong> - Book a trip (coordinates all travel planning)</li>
+            <li><strong>hotel-agent</strong> - Book a hotel (specialized in accommodations)</li>
+            <li><strong>flight-agent</strong> - Book a flight (specialized in air travel)</li>
+        </ul>
+    </div>
+
+    <div class="chat-container">
+        <h3>Test Your Travel Agent</h3>
+        
+        <select id="agentSelect" style="margin: 10px 0; padding: 5px;">
+            <option value="">Auto-select agent</option>
+            <option value="supervisor">Supervisor (trip planning)</option>
+            <option value="hotel-agent">Hotel Agent</option>
+            <option value="flight-agent">Flight Agent</option>
+        </select>
+        
+        <input type="text" id="messageInput" class="message-input" 
+               placeholder="Ask about hotels, flights, or trip planning..."
+               value="I need to plan a trip to Tokyo with flights and hotels">
+        
+        <button onclick="sendMessage()" class="send-button">Send Message</button>
+        
+        <div id="response" class="response" style="display: none;"></div>
+        <div id="loading" style="display: none;">🤔 Agent is thinking...</div>
+    </div>
+
+    <div class="chat-container">
+        <h3>Quick Test Buttons</h3>
+        <button onclick="testAgentInfo()" class="send-button" style="margin: 5px;">Test Agent Info</button>
+        <button onclick="testHotelSearch()" class="send-button" style="margin: 5px;">Test Hotel Search</button>
+        <button onclick="testFlightSearch()" class="send-button" style="margin: 5px;">Test Flight Search</button>
+        <button onclick="testMCPTools()" class="send-button" style="margin: 5px;">Test MCP Tools</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const agentSelect = document.getElementById('agentSelect');
+            const responseDiv = document.getElementById('response');
+            const loadingDiv = document.getElementById('loading');
+            
+            const message = messageInput.value.trim();
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            responseDiv.style.display = 'none';
+            
+            try {
+                const payload = {
+                    messages: [
+                        { role: 'user', content: message }
+                    ]
+                };
+                
+                // Add agent selection if specified
+                if (agentSelect.value) {
+                    payload.agent = agentSelect.value;
+                }
+                
+                console.log('Sending payload:', payload);
+                
+                const response = await fetch('/copilotkit/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.text();
+                console.log('Raw response:', data);
+                
+                // Try to parse as JSON
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(data);
+                    responseDiv.innerHTML = JSON.stringify(parsedData, null, 2);
+                } catch (e) {
+                    responseDiv.innerHTML = data;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                responseDiv.innerHTML = `Error: ${error.message}`;
+            }
+            
+            // Hide loading and show response
+            loadingDiv.style.display = 'none';
+            responseDiv.style.display = 'block';
+        }
+        
+        async function testAgentInfo() {
+            const responseDiv = document.getElementById('response');
+            try {
+                const response = await fetch('/copilotkit/', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                responseDiv.innerHTML = `Agent Info:\n${JSON.stringify(data, null, 2)}`;
+                responseDiv.style.display = 'block';
+            } catch (error) {
+                responseDiv.innerHTML = `Error: ${error.message}`;
+                responseDiv.style.display = 'block';
+            }
+        }
+        
+        function testHotelSearch() {
+            document.getElementById('messageInput').value = "Find me hotels in Paris for next week with good ratings";
+            document.getElementById('agentSelect').value = "hotel-agent";
+        }
+        
+        function testFlightSearch() {
+            document.getElementById('messageInput').value = "Search for flights from New York to Tokyo for next month";
+            document.getElementById('agentSelect').value = "flight-agent";
+        }
+        
+        function testMCPTools() {
+            document.getElementById('messageInput').value = "Use your web search tools to find the best travel deals to Barcelona";
+            document.getElementById('agentSelect').value = "supervisor";
+        }
+        
+        // Allow Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

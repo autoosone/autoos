@@ -1,0 +1,11 @@
+WORKING CONFIGURATION FOUND!
+========================
+Endpoint: https://run.blaxel.ai/amo/agents/template-copilot-kit-py
+API Key: bl_47yrrlxn6geic2wq9asrv5rapygyycj7
+Header: Authorization: Bearer bl_47yrrlxn6geic2wq9asrv5rapygyycj7
+
+Example cURL:
+curl -X POST "https://run.blaxel.ai/amo/agents/template-copilot-kit-py" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer bl_47yrrlxn6geic2wq9asrv5rapygyycj7" \
+  -d '{"inputs": "test"}'

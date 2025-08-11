@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaxel Agent Interface - 100% Working</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.connecting {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .endpoint-selector {
+            margin-bottom: 20px;
+        }
+
+        .endpoint-selector label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .endpoint-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .test-button {
+            padding: 10px;
+            background: #f3f4f6;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .test-button:hover {
+            background: #e5e7eb;
+        }
+
+        .response-container {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-header {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .response {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .response.error {
+            border-left-color: #ef4444;
+            background: #fee;
+        }
+
+        .response.success {
+            border-left-color: #10b981;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .response-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .api-info {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .api-info h3 {
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .api-info code {
+            background: #dbeafe;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .thread-info {
+            background: #f0fdf4;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .thread-info strong {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Blaxel Agent Interface</h1>
+        <span id="status" class="status connecting">Initializing...</span>
+
+        <div class="api-info">
+            <h3>📡 API Configuration</h3>
+            <div>
+                <strong>API Key:</strong> <code>bl_47yrrlxn6geic2wq9asrv5rapygyycj7</code><br>
+                <strong>Workspace:</strong> <code>amo</code><br>
+                <strong>Agent:</strong> <code>template-copilot-kit-py</code>
+            </div>
+        </div>
+
+        <div class="endpoint-selector">
+            <label for="endpoint">Select Endpoint:</label>
+            <select id="endpoint">
+                <option value="https://run.blaxel.ai/amo/agents/template-copilot-kit-py">Main Agent Endpoint</option>
+                <option value="https://run.blaxel.ai/amo/copilotkit">CopilotKit Endpoint</option>
+            </select>
+        </div>
+
+        <div class="thread-info">
+            <strong>Thread ID:</strong> <span id="threadId"></span> (for conversation continuity)
+        </div>
+
+        <div class="test-buttons">
+            <button class="test-button" onclick="runTest('health')">🔍 Health Check</button>
+            <button class="test-button" onclick="runTest('hello')">👋 Say Hello</button>
+            <button class="test-button" onclick="runTest('flight')">✈️ Book Flight</button>
+            <button class="test-button" onclick="runTest('hotel')">🏨 Find Hotel</button>
+            <button class="test-button" onclick="runTest('weather')">☀️ Weather Info</button>
+            <button class="test-button" onclick="runTest('time')">🕐 Current Time</button>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" id="sendButton">Send Message</button>
+        </div>
+
+        <div class="response-container">
+            <div class="response-header">📨 Responses:</div>
+            <div id="responses"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_KEY = 'bl_47yrrlxn6geic2wq9asrv5rapygyycj7';
+        const THREAD_ID = 'thread-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Initialize
+        document.getElementById('threadId').textContent = THREAD_ID;
+
+        // Test the connection on load
+        window.onload = async () => {
+            await testConnection();
+        };
+
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status connecting';
+            statusEl.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(document.getElementById('endpoint').value, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.className = 'status connected';
+                    statusEl.textContent = '✅ Connected';
+                    addResponse('System', 'Connection established: ' + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Connection Error';
+                addResponse('System', 'Connection failed: ' + error.message, 'error');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            const button = document.getElementById('sendButton');
+            button.disabled = true;
+            button.innerHTML = 'Sending... <div class="loading"></div>';
+
+            try {
+                const endpoint = document.getElementById('endpoint').value;
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'X-Blaxel-Thread-Id': THREAD_ID
+                    },
+                    body: JSON.stringify({
+                        inputs: message
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResponse('You', message, 'success');
+                    addResponse('Agent', JSON.stringify(data, null, 2), 'success');
+                    input.value = '';
+                } else {
+                    addResponse('Error', JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                addResponse('Error', error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Send Message';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addResponse(sender, message, type = '') {
+            const responsesEl = document.getElementById('responses');
+            const responseEl = document.createElement('div');
+            responseEl.className = `response ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            responseEl.innerHTML = `
+                <div class="timestamp">${timestamp} - ${sender}</div>
+                <div class="response-content">${message}</div>
+            `;
+            
+            responsesEl.insertBefore(responseEl, responsesEl.firstChild);
+            
+            // Keep only last 10 responses
+            while (responsesEl.children.length > 10) {
+                responsesEl.removeChild(responsesEl.lastChild);
+            }
+        }
+
+        async function runTest(testType) {
+            const messages = {
+                'health': 'health check',
+                'hello': 'Hello! How are you today?',
+                'flight': 'I need to book a flight from New York to London next week',
+                'hotel': 'Find me a hotel in Paris for 3 nights',
+                'weather': 'What\'s the weather like in Tokyo?',
+                'time': 'What time is it in different time zones?'
+            };
+
+            document.getElementById('messageInput').value = messages[testType];
+            await sendMessage();
+        }
+
+        // Auto-test connection when endpoint changes
+        document.getElementById('endpoint').addEventListener('change', testConnection);
+    </script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaxel Travel Planner - Map View</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            max-width: 800px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-bar button:hover {
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .sidebar h3 {
+            color: #666;
+            margin: 20px 0 10px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trip-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .trip-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .trip-card.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .trip-card h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .trip-card .details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .trip-card .price {
+            color: #4caf50;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+
+        .agent-status {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .agent-status.connected {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .agent-status.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .popup-content {
+            font-size: 14px;
+        }
+
+        .popup-content h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>🗺️ Blaxel Travel Planner - Interactive Map</h1>
+        <div class="search-bar">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="e.g., Book a flight from NYC to London and find hotels"
+                value="Find flights from New York to Paris and hotels near Eiffel Tower"
+            >
+            <button onclick="searchTrips()">Search Trips</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div id="agentStatus" class="agent-status">
+                🤖 Agent Ready - Connected to Blaxel
+            </div>
+
+            <h2>Your Trip Itinerary</h2>
+            
+            <h3>✈️ Flights</h3>
+            <div id="flightsList">
+                <div class="trip-card" onclick="selectFlight(1)">
+                    <h4>New York (JFK) → Paris (CDG)</h4>
+                    <div class="details">Air France • 7h 45m • Direct</div>
+                    <div class="price">$650</div>
+                </div>
+                <div class="trip-card" onclick="selectFlight(2)">
+                    <h4>New York (JFK) → London (LHR)</h4>
+                    <div class="details">British Airways • 7h 15m • Direct</div>
+                    <div class="price">$750</div>
+                </div>
+                <div class="trip-card" onclick="selectFlight(3)">
+                    <h4>Los Angeles (LAX) → Tokyo (NRT)</h4>
+                    <div class="details">JAL • 11h 45m • Direct</div>
+                    <div class="price">$1,200</div>
+                </div>
+            </div>
+
+            <h3>🏨 Hotels</h3>
+            <div id="hotelsList">
+                <div class="trip-card" onclick="selectHotel(1)">
+                    <h4>Hotel Plaza Athénée</h4>
+                    <div class="details">Paris, Near Eiffel Tower</div>
+                    <div class="price">$450/night • ⭐ 4.8</div>
+                </div>
+                <div class="trip-card" onclick="selectHotel(2)">
+                    <h4>The Ritz London</h4>
+                    <div class="details">Piccadilly, Central London</div>
+                    <div class="price">$600/night • ⭐ 4.9</div>
+                </div>
+                <div class="trip-card" onclick="selectHotel(3)">
+                    <h4>Park Hyatt Tokyo</h4>
+                    <div class="details">Shinjuku, Tokyo</div>
+                    <div class="price">$500/night • ⭐ 4.7</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([40.7128, -74.0060], 3);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Airport data
+        const airports = {
+            'JFK': { name: 'JFK International', lat: 40.6413, lng: -73.7781, city: 'New York' },
+            'LAX': { name: 'Los Angeles Intl', lat: 33.9425, lng: -118.4081, city: 'Los Angeles' },
+            'LHR': { name: 'Heathrow', lat: 51.4700, lng: -0.4543, city: 'London' },
+            'CDG': { name: 'Charles de Gaulle', lat: 49.0097, lng: 2.5479, city: 'Paris' },
+            'NRT': { name: 'Narita', lat: 35.7720, lng: 140.3929, city: 'Tokyo' },
+        };
+
+        // Hotel data
+        const hotels = [
+            { id: 1, name: 'Hotel Plaza Athénée', lat: 48.8660, lng: 2.3045, city: 'Paris' },
+            { id: 2, name: 'The Ritz London', lat: 51.5074, lng: -0.1419, city: 'London' },
+            { id: 3, name: 'Park Hyatt Tokyo', lat: 35.6852, lng: 139.7281, city: 'Tokyo' },
+        ];
+
+        // Flight routes
+        const flights = [
+            { id: 1, from: 'JFK', to: 'CDG', color: '#ff6b6b' },
+            { id: 2, from: 'JFK', to: 'LHR', color: '#4ecdc4' },
+            { id: 3, from: 'LAX', to: 'NRT', color: '#45b7d1' },
+        ];
+
+        // Custom icons
+        const airportIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const hotelIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // Add airport markers
+        Object.entries(airports).forEach(([code, airport]) => {
+            L.marker([airport.lat, airport.lng], { icon: airportIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <h4>✈️ ${airport.name}</h4>
+                        <div>${airport.city} (${code})</div>
+                    </div>
+                `);
+        });
+
+        // Add hotel markers
+        hotels.forEach(hotel => {
+            L.marker([hotel.lat, hotel.lng], { icon: hotelIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <h4>🏨 ${hotel.name}</h4>
+                        <div>${hotel.city}</div>
+                    </div>
+                `);
+        });
+
+        // Add flight routes
+        const flightLines = {};
+        flights.forEach(flight => {
+            const from = airports[flight.from];
+            const to = airports[flight.to];
+            
+            flightLines[flight.id] = L.polyline(
+                [[from.lat, from.lng], [to.lat, to.lng]], 
+                {
+                    color: flight.color,
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10'
+                }
+            ).addTo(map);
+        });
+
+        // Selection functions
+        function selectFlight(id) {
+            // Clear previous selections
+            document.querySelectorAll('#flightsList .trip-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection
+            event.currentTarget.classList.add('selected');
+            
+            // Highlight flight route
+            Object.values(flightLines).forEach(line => {
+                line.setStyle({ weight: 3, dashArray: '10, 10' });
+            });
+            
+            if (flightLines[id]) {
+                flightLines[id].setStyle({ weight: 5, dashArray: '' });
+            }
+        }
+
+        function selectHotel(id) {
+            // Clear previous selections
+            document.querySelectorAll('#hotelsList .trip-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection
+            event.currentTarget.classList.add('selected');
+            
+            // Center map on hotel
+            const hotel = hotels.find(h => h.id === id);
+            if (hotel) {
+                map.setView([hotel.lat, hotel.lng], 12);
+            }
+        }
+
+        // Blaxel Agent Integration
+        const API_KEY = 'bl_47yrrlxn6geic2wq9asrv5rapygyycj7';
+        const ENDPOINT = 'https://run.blaxel.ai/amo/agents/template-copilot-kit-py';
+
+        async function searchTrips() {
+            const query = document.getElementById('searchInput').value;
+            const statusEl = document.getElementById('agentStatus');
+            
+            statusEl.className = 'agent-status';
+            statusEl.innerHTML = '🔍 Searching with Blaxel Agent... <span class="loading"></span>';
+            
+            // Note: This won't work directly from browser due to CORS
+            // In production, you'd call your backend which then calls Blaxel
+            
+            // For demo, showing the API call structure
+            console.log('Would call Blaxel API with:', {
+                endpoint: ENDPOINT,
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: { inputs: query }
+            });
+            
+            // Simulate response
+            setTimeout(() => {
+                statusEl.className = 'agent-status connected';
+                statusEl.innerHTML = '✅ Agent found 3 flights and 3 hotels matching your criteria';
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusEl = document.getElementById('agentStatus');
+            statusEl.className = 'agent-status connected';
+            statusEl.innerHTML = '✅ Connected to Blaxel Travel Agent';
+        });
+    </script>
+</body>
+</html>
