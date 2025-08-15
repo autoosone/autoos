@@ -21,7 +21,7 @@
         }
 
         .app-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -49,7 +49,7 @@
         .search-bar button {
             padding: 12px 24px;
             background: white;
-            color: #667eea;
+            color: #1e3c72;
             border: none;
             border-radius: 8px;
             font-weight: bold;
@@ -89,7 +89,7 @@
             gap: 8px;
         }
 
-        .trip-card {
+        .vehicle-card {
             background: #f9f9f9;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -99,27 +99,27 @@
             transition: all 0.3s;
         }
 
-        .trip-card:hover {
+        .vehicle-card:hover {
             transform: translateX(5px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .trip-card.selected {
+        .vehicle-card.selected {
             background: #e3f2fd;
             border-color: #2196f3;
         }
 
-        .trip-card h4 {
+        .vehicle-card h4 {
             color: #333;
             margin-bottom: 5px;
         }
 
-        .trip-card .details {
+        .vehicle-card .details {
             font-size: 14px;
             color: #666;
         }
 
-        .trip-card .price {
+        .vehicle-card .price {
             color: #4caf50;
             font-weight: bold;
             margin-top: 5px;
@@ -154,7 +154,7 @@
             width: 16px;
             height: 16px;
             border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
+            border-top: 2px solid #1e3c72;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-left: 10px;
@@ -192,24 +192,24 @@
     <div class="main-container">
         <div class="sidebar">
             <div id="agentStatus" class="agent-status">
-                🤖 Agent Ready - Connected to Blaxel
+                🤖 Agent Ready - Connected to Blaxel Auto
             </div>
 
-            <h2>Vehicle Inventory</h2>
+            <h2>Your Vehicle Search</h2>
             
             <h3>🚗 Available Vehicles</h3>
             <div id="vehiclesList">
-                <div class="trip-card" onclick="selectVehicle(1)">
+                <div class="vehicle-card" onclick="selectVehicle(1)">
                     <h4>2023 Honda CR-V EX</h4>
                     <div class="details">AWD • 28/34 MPG • 12k miles</div>
                     <div class="price">$28,900</div>
                 </div>
-                <div class="trip-card" onclick="selectVehicle(2)">
+                <div class="vehicle-card" onclick="selectVehicle(2)">
                     <h4>2023 Toyota RAV4 LE</h4>
                     <div class="details">FWD • 27/35 MPG • 8k miles</div>
                     <div class="price">$27,500</div>
                 </div>
-                <div class="trip-card" onclick="selectVehicle(3)">
+                <div class="vehicle-card" onclick="selectVehicle(3)">
                     <h4>2022 Mazda CX-5 Select</h4>
                     <div class="details">AWD • 25/31 MPG • 15k miles</div>
                     <div class="price">$26,800</div>
@@ -218,15 +218,15 @@
 
             <h3>🏢 Nearby Dealers</h3>
             <div id="dealersList">
-                <div class="trip-card" onclick="selectDealer(1)">
+                <div class="vehicle-card" onclick="selectDealer(1)">
                     <h4>AutoMax Denver</h4>
                     <div class="details">Downtown • 4.8⭐ • 2 miles</div>
                 </div>
-                <div class="trip-card" onclick="selectDealer(2)">
+                <div class="vehicle-card" onclick="selectDealer(2)">
                     <h4>Premium Motors</h4>
                     <div class="details">Aurora • 4.6⭐ • 5 miles</div>
                 </div>
-                <div class="trip-card" onclick="selectDealer(3)">
+                <div class="vehicle-card" onclick="selectDealer(3)">
                     <h4>City Auto Sales</h4>
                     <div class="details">Littleton • 4.7⭐ • 8 miles</div>
                 </div>
@@ -240,47 +240,29 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
-        // Initialize map
-        const map = L.map('map').setView([40.7128, -74.0060], 3);
+        // Initialize map (Denver area for auto dealers)
+        const map = L.map('map').setView([39.7392, -104.9903], 11);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Airport data
-        const airports = {
-            'JFK': { name: 'JFK International', lat: 40.6413, lng: -73.7781, city: 'New York' },
-            'LAX': { name: 'Los Angeles Intl', lat: 33.9425, lng: -118.4081, city: 'Los Angeles' },
-            'LHR': { name: 'Heathrow', lat: 51.4700, lng: -0.4543, city: 'London' },
-            'CDG': { name: 'Charles de Gaulle', lat: 49.0097, lng: 2.5479, city: 'Paris' },
-            'NRT': { name: 'Narita', lat: 35.7720, lng: 140.3929, city: 'Tokyo' },
-        };
-
-        // Hotel data
-        const hotels = [
-            { id: 1, name: 'Hotel Plaza Athénée', lat: 48.8660, lng: 2.3045, city: 'Paris' },
-            { id: 2, name: 'The Ritz London', lat: 51.5074, lng: -0.1419, city: 'London' },
-            { id: 3, name: 'Park Hyatt Tokyo', lat: 35.6852, lng: 139.7281, city: 'Tokyo' },
+        // Vehicle/Dealer locations in Denver area
+        const vehicles = [
+            { id: 1, name: '2023 Honda CR-V', price: '$28,900', lat: 39.7392, lng: -104.9903 },
+            { id: 2, name: '2023 Toyota RAV4', price: '$27,500', lat: 39.7294, lng: -104.8319 },
+            { id: 3, name: '2022 Mazda CX-5', price: '$26,800', lat: 39.6133, lng: -104.9500 }
         ];
 
-        // Flight routes
-        const flights = [
-            { id: 1, from: 'JFK', to: 'CDG', color: '#ff6b6b' },
-            { id: 2, from: 'JFK', to: 'LHR', color: '#4ecdc4' },
-            { id: 3, from: 'LAX', to: 'NRT', color: '#45b7d1' },
+        // Dealer locations
+        const dealers = [
+            { id: 1, name: 'AutoMax Denver', lat: 39.7392, lng: -104.9903, city: 'Denver' },
+            { id: 2, name: 'Premium Motors', lat: 39.7294, lng: -104.8319, city: 'Aurora' },
+            { id: 3, name: 'City Auto Sales', lat: 39.6133, lng: -104.9500, city: 'Littleton' }
         ];
 
         // Custom icons
-        const airportIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        const hotelIcon = L.icon({
+        const vehicleIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
             iconSize: [25, 41],
@@ -289,85 +271,74 @@
             shadowSize: [41, 41]
         });
 
-        // Add airport markers
-        Object.entries(airports).forEach(([code, airport]) => {
-            L.marker([airport.lat, airport.lng], { icon: airportIcon })
+        const dealerIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // Add vehicle markers
+        vehicles.forEach(vehicle => {
+            L.marker([vehicle.lat, vehicle.lng], { icon: vehicleIcon })
                 .addTo(map)
                 .bindPopup(`
                     <div class="popup-content">
-                        <h4>✈️ ${airport.name}</h4>
-                        <div>${airport.city} (${code})</div>
+                        <h4>🚗 ${vehicle.name}</h4>
+                        <div>Price: ${vehicle.price}</div>
                     </div>
                 `);
         });
 
-        // Add hotel markers
-        hotels.forEach(hotel => {
-            L.marker([hotel.lat, hotel.lng], { icon: hotelIcon })
+        // Add dealer markers
+        dealers.forEach(dealer => {
+            L.marker([dealer.lat, dealer.lng], { icon: dealerIcon })
                 .addTo(map)
                 .bindPopup(`
                     <div class="popup-content">
-                        <h4>🏨 ${hotel.name}</h4>
-                        <div>${hotel.city}</div>
+                        <h4>🏢 ${dealer.name}</h4>
+                        <div>${dealer.city}</div>
                     </div>
                 `);
-        });
-
-        // Add flight routes
-        const flightLines = {};
-        flights.forEach(flight => {
-            const from = airports[flight.from];
-            const to = airports[flight.to];
-            
-            flightLines[flight.id] = L.polyline(
-                [[from.lat, from.lng], [to.lat, to.lng]], 
-                {
-                    color: flight.color,
-                    weight: 3,
-                    opacity: 0.7,
-                    dashArray: '10, 10'
-                }
-            ).addTo(map);
         });
 
         // Selection functions
-        function selectFlight(id) {
+        function selectVehicle(id) {
             // Clear previous selections
-            document.querySelectorAll('#flightsList .trip-card').forEach(card => {
+            document.querySelectorAll('#vehiclesList .vehicle-card').forEach(card => {
                 card.classList.remove('selected');
             });
             
             // Add selection
             event.currentTarget.classList.add('selected');
             
-            // Highlight flight route
-            Object.values(flightLines).forEach(line => {
-                line.setStyle({ weight: 3, dashArray: '10, 10' });
-            });
-            
-            if (flightLines[id]) {
-                flightLines[id].setStyle({ weight: 5, dashArray: '' });
+            // Center map on vehicle
+            const vehicle = vehicles.find(v => v.id === id);
+            if (vehicle) {
+                map.setView([vehicle.lat, vehicle.lng], 13);
             }
         }
 
-        function selectHotel(id) {
+        function selectDealer(id) {
             // Clear previous selections
-            document.querySelectorAll('#hotelsList .trip-card').forEach(card => {
+            document.querySelectorAll('#dealersList .vehicle-card').forEach(card => {
                 card.classList.remove('selected');
             });
             
             // Add selection
             event.currentTarget.classList.add('selected');
             
-            // Center map on hotel
-            const hotel = hotels.find(h => h.id === id);
-            if (hotel) {
-                map.setView([hotel.lat, hotel.lng], 12);
+            // Center map on dealer
+            const dealer = dealers.find(d => d.id === id);
+            if (dealer) {
+                map.setView([dealer.lat, dealer.lng], 13);
             }
         }
 
         // Blaxel Agent Integration
-        const API_KEY = 'bl_ypbq1x2cdwy272rekcj6017jpvn8o161'; // Using second key that works
+        const API_KEY = 'bl_ypbq1x2cdwy272rekcj6017jpvn8o161';
         const ENDPOINT = 'https://run.blaxel.ai/amo/agents/template-copilot-kit-py';
 
         async function searchVehicles() {
@@ -375,7 +346,7 @@
             const statusEl = document.getElementById('agentStatus');
             
             statusEl.className = 'agent-status';
-            statusEl.innerHTML = '🔍 Searching with Blaxel Agent... <span class="loading"></span>';
+            statusEl.innerHTML = '🔍 Searching with Blaxel Auto Agent... <span class="loading"></span>';
             
             // Note: This won't work directly from browser due to CORS
             // In production, you'd call your backend which then calls Blaxel
@@ -393,7 +364,7 @@
             // Simulate response
             setTimeout(() => {
                 statusEl.className = 'agent-status connected';
-                statusEl.innerHTML = '✅ Agent found 3 flights and 3 hotels matching your criteria';
+                statusEl.innerHTML = '✅ Agent found 3 SUVs matching your criteria';
             }, 2000);
         }
 
@@ -401,7 +372,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const statusEl = document.getElementById('agentStatus');
             statusEl.className = 'agent-status connected';
-            statusEl.innerHTML = '✅ Connected to Blaxel Travel Agent';
+            statusEl.innerHTML = '✅ Connected to Blaxel Auto Agent';
         });
     </script>
 </body>

@@ -10,8 +10,8 @@ from fastapi import FastAPI
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from .agent import agent
-from .flight import agent as flight_agent
-from .hotel import agent as hotel_agent
+from .vehicle import agent as vehicle_agent
+from .dealer import agent as dealer_agent
 from .server.error import init_error_handlers
 from .server.middleware import init_middleware
 
@@ -41,15 +41,25 @@ async def lifespan(app: FastAPI):
 # Create the SDK after the graph is initialized
 async def get_sdk():
     supervisor = await agent()
-    flight = await flight_agent()
-    hotel = await hotel_agent()
+    vehicle = await vehicle_agent()
+    dealer = await dealer_agent()
     sdk = CopilotKitRemoteEndpoint(
         agents=[
             LangGraphAgent(
-                name="supervisor", description="Book a trip", graph=supervisor
+                name="automotive-supervisor", 
+                description="Find your perfect vehicle", 
+                graph=supervisor
             ),
-            LangGraphAgent(name="hotel-agent", description="Book a hotel", graph=hotel),
-            LangGraphAgent(name="flight-agent", description="Book a flight", graph=flight),
+            LangGraphAgent(
+                name="vehicle-agent", 
+                description="Search and analyze vehicles", 
+                graph=vehicle
+            ),
+            LangGraphAgent(
+                name="dealer-agent", 
+                description="Find dealers and schedule test drives", 
+                graph=dealer
+            ),
         ],
     )
     return sdk

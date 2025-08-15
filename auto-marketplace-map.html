@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoOS Marketplace - Interactive Vehicle Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            max-width: 800px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            padding: 12px 24px;
+            background: white;
+            color: #1e3c72;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-bar button:hover {
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .sidebar h3 {
+            color: #666;
+            margin: 20px 0 10px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vehicle-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .vehicle-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .vehicle-card.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .vehicle-card h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .vehicle-card .details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .vehicle-card .price {
+            color: #4caf50;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .dealer-card {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .dealer-card:hover {
+            background: #ffeaa7;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+
+        .agent-status {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .agent-status.connected {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .agent-status.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .popup-content {
+            font-size: 14px;
+        }
+
+        .popup-content h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .filter-section {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-section select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>🚗 AutoOS Marketplace - AI-Powered Vehicle Discovery</h1>
+        <div class="search-bar">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="e.g., Find me a reliable SUV under $30k with good MPG"
+                value="Show me Honda Civics under $25k with low mileage"
+            >
+            <button onclick="searchVehicles()">Search Vehicles</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div id="agentStatus" class="agent-status">
+                🤖 AI Agent Ready - Connected to AutoOS
+            </div>
+
+            <h2>Vehicle Inventory</h2>
+            
+            <div class="filter-section">
+                <label>Filter by Make:</label>
+                <select id="makeFilter" onchange="filterVehicles()">
+                    <option value="">All Makes</option>
+                    <option value="honda">Honda</option>
+                    <option value="toyota">Toyota</option>
+                    <option value="ford">Ford</option>
+                    <option value="chevrolet">Chevrolet</option>
+                </select>
+            </div>
+
+            <h3>🚗 Available Vehicles</h3>
+            <div id="vehiclesList">
+                <div class="vehicle-card" onclick="selectVehicle(1)">
+                    <h4>2023 Honda Civic LX</h4>
+                    <div class="details">FWD • 32/42 MPG • 15k miles</div>
+                    <div class="price">$23,500</div>
+                </div>
+                <div class="vehicle-card" onclick="selectVehicle(2)">
+                    <h4>2023 Toyota Camry SE</h4>
+                    <div class="details">FWD • 28/39 MPG • 18k miles</div>
+                    <div class="price">$26,800</div>
+                </div>
+                <div class="vehicle-card" onclick="selectVehicle(3)">
+                    <h4>2022 Honda CR-V EX</h4>
+                    <div class="details">AWD • 27/32 MPG • 22k miles</div>
+                    <div class="price">$29,900</div>
+                </div>
+                <div class="vehicle-card" onclick="selectVehicle(4)">
+                    <h4>2023 Ford F-150 XLT</h4>
+                    <div class="details">4WD • 20/24 MPG • 10k miles</div>
+                    <div class="price">$45,500</div>
+                </div>
+                <div class="vehicle-card" onclick="selectVehicle(5)">
+                    <h4>2022 Chevrolet Tahoe LT</h4>
+                    <div class="details">4WD • 16/20 MPG • 25k miles</div>
+                    <div class="price">$52,900</div>
+                </div>
+            </div>
+
+            <h3>🏢 Dealer Network</h3>
+            <div id="dealersList">
+                <div class="dealer-card" onclick="selectDealer(1)">
+                    <h4>AutoMax Denver</h4>
+                    <div class="details">Downtown • 4.8⭐ • 50+ vehicles</div>
+                </div>
+                <div class="dealer-card" onclick="selectDealer(2)">
+                    <h4>Premium Motors Aurora</h4>
+                    <div class="details">Aurora • 4.6⭐ • 35+ vehicles</div>
+                </div>
+                <div class="dealer-card" onclick="selectDealer(3)">
+                    <h4>City Auto Sales</h4>
+                    <div class="details">Littleton • 4.7⭐ • 40+ vehicles</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize map centered on Denver/Colorado area
+        const map = L.map('map').setView([39.7392, -104.9903], 10);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Vehicle inventory data with locations
+        const vehicles = [
+            { id: 1, make: 'Honda', model: 'Civic LX', year: 2023, price: 23500, lat: 39.7392, lng: -104.9903, dealer: 'AutoMax Denver' },
+            { id: 2, make: 'Toyota', model: 'Camry SE', year: 2023, price: 26800, lat: 39.7294, lng: -104.8319, dealer: 'Premium Motors Aurora' },
+            { id: 3, make: 'Honda', model: 'CR-V EX', year: 2022, price: 29900, lat: 39.6133, lng: -104.9500, dealer: 'City Auto Sales' },
+            { id: 4, make: 'Ford', model: 'F-150 XLT', year: 2023, price: 45500, lat: 39.7817, lng: -104.8719, dealer: 'AutoMax Denver' },
+            { id: 5, make: 'Chevrolet', model: 'Tahoe LT', year: 2022, price: 52900, lat: 39.6889, lng: -104.9400, dealer: 'Premium Motors Aurora' },
+        ];
+
+        // Dealer locations
+        const dealers = [
+            { id: 1, name: 'AutoMax Denver', lat: 39.7392, lng: -104.9903, inventory: 50 },
+            { id: 2, name: 'Premium Motors Aurora', lat: 39.7294, lng: -104.8319, inventory: 35 },
+            { id: 3, name: 'City Auto Sales', lat: 39.6133, lng: -104.9500, inventory: 40 },
+        ];
+
+        // Custom icons
+        const vehicleIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const dealerIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // Add vehicle markers
+        const vehicleMarkers = {};
+        vehicles.forEach(vehicle => {
+            vehicleMarkers[vehicle.id] = L.marker([vehicle.lat, vehicle.lng], { icon: vehicleIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <h4>🚗 ${vehicle.year} ${vehicle.make} ${vehicle.model}</h4>
+                        <div>Price: $${vehicle.price.toLocaleString()}</div>
+                        <div>Dealer: ${vehicle.dealer}</div>
+                        <button onclick="scheduleTestDrive(${vehicle.id})">Schedule Test Drive</button>
+                    </div>
+                `);
+        });
+
+        // Add dealer markers
+        dealers.forEach(dealer => {
+            L.marker([dealer.lat, dealer.lng], { icon: dealerIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <h4>🏢 ${dealer.name}</h4>
+                        <div>${dealer.inventory}+ vehicles in stock</div>
+                        <button onclick="contactDealer(${dealer.id})">Contact Dealer</button>
+                    </div>
+                `);
+        });
+
+        // Selection functions
+        function selectVehicle(id) {
+            // Clear previous selections
+            document.querySelectorAll('#vehiclesList .vehicle-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection
+            event.currentTarget.classList.add('selected');
+            
+            // Center map on vehicle
+            const vehicle = vehicles.find(v => v.id === id);
+            if (vehicle) {
+                map.setView([vehicle.lat, vehicle.lng], 13);
+                vehicleMarkers[id].openPopup();
+            }
+        }
+
+        function selectDealer(id) {
+            // Clear previous selections
+            document.querySelectorAll('#dealersList .dealer-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection  
+            event.currentTarget.classList.add('selected');
+            
+            // Center map on dealer
+            const dealer = dealers.find(d => d.id === id);
+            if (dealer) {
+                map.setView([dealer.lat, dealer.lng], 13);
+            }
+        }
+
+        function filterVehicles() {
+            const makeFilter = document.getElementById('makeFilter').value;
+            // In production, this would filter the actual vehicle list
+            console.log('Filtering by make:', makeFilter);
+        }
+
+        function scheduleTestDrive(vehicleId) {
+            alert(`Test drive scheduled for vehicle #${vehicleId}! A dealer will contact you shortly.`);
+        }
+
+        function contactDealer(dealerId) {
+            alert(`Connecting you with dealer #${dealerId}...`);
+        }
+
+        // Blaxel Agent Integration (using working config)
+        const API_KEY = 'bl_47yrrlxn6geic2wq9asrv5rapygyycj7';
+        const ENDPOINT = 'https://run.blaxel.ai/amo/agents/template-copilot-kit-py';
+
+        async function searchVehicles() {
+            const query = document.getElementById('searchInput').value;
+            const statusEl = document.getElementById('agentStatus');
+            
+            statusEl.className = 'agent-status';
+            statusEl.innerHTML = '🔍 AI Agent searching inventory... <span class="loading"></span>';
+            
+            // This would call your backend which then calls Blaxel
+            // For demo, showing the API call structure
+            console.log('Calling AutoOS AI Agent:', {
+                endpoint: ENDPOINT,
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: { 
+                    inputs: query,
+                    context: 'automotive marketplace'
+                }
+            });
+            
+            // Simulate AI response
+            setTimeout(() => {
+                statusEl.className = 'agent-status connected';
+                statusEl.innerHTML = '✅ AI found 5 vehicles matching your criteria (Honda Civic, low mileage, under $25k)';
+                
+                // Highlight matching vehicles
+                document.querySelectorAll('.vehicle-card')[0].style.border = '2px solid #4caf50';
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusEl = document.getElementById('agentStatus');
+            statusEl.className = 'agent-status connected';
+            statusEl.innerHTML = '✅ Connected to AutoOS AI Agent - Ready to help find your perfect vehicle!';
+        });
+    </script>
+</body>
+</html>
