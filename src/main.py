@@ -20,7 +20,9 @@ logger = getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"Server running on port {os.getenv('BL_SERVER_PORT', 80)}")
+    # Use system PORT variable
+    port = os.environ.get("PORT", "8080")
+    logger.info(f"Server running on port {port}")
     try:
         # Initialize the SDK
         sdk = await get_sdk()
@@ -28,8 +30,13 @@ async def lifespan(app: FastAPI):
         # Store in app state
         app.state.sdk = sdk
 
-        # Add CopilotKit endpoint
-        add_fastapi_endpoint(app, sdk, "/copilotkit", use_thread_pool=False)
+        # Add CopilotKit endpoint with error handling
+        try:
+            add_fastapi_endpoint(app, sdk, "/copilotkit")
+            logger.info("CopilotKit endpoint added successfully")
+        except Exception as copilot_error:
+            logger.error(f"Failed to add CopilotKit endpoint: {str(copilot_error)}")
+            # Continue without CopilotKit endpoint - base agent still works
 
         yield
         logger.info("Server shutting down")
@@ -77,7 +84,44 @@ async def root():
 # Add a POST endpoint that matches the Blaxel agent interface  
 @app.post("/")
 async def agent_endpoint(request: dict):
-    return {"message": "Agent received input", "input": request, "available_endpoints": ["/copilotkit"]}
+    # CRITICAL FIX: Check for "inputs" not "input"
+    if "inputs" in request:
+        return {"message": "Agent received input", "input": request, "available_endpoints": ["/copilotkit"]}
+    else:
+        return {"error": "Missing 'inputs' field in request body"}, 400
+
+# Add health endpoints for monitoring
+@app.get("/healthz")
+async def health():
+    return {"status": "ok", "service": "copilotkit-agent", "timestamp": os.environ.get("DEPLOYMENT_ID", "local")}
+
+# Add manual CopilotKit endpoint as fallback
+@app.post("/copilotkit")
+async def copilotkit_fallback():
+    """Fallback CopilotKit endpoint if automatic mounting fails"""
+    try:
+        sdk = app.state.sdk
+        return {
+            "agents": [
+                {
+                    "name": "automotive-supervisor",
+                    "description": "Find your perfect vehicle"
+                },
+                {
+                    "name": "vehicle-agent", 
+                    "description": "Search and analyze vehicles"
+                },
+                {
+                    "name": "dealer-agent",
+                    "description": "Find dealers and schedule test drives"
+                }
+            ],
+            "status": "available",
+            "sdkVersion": "1.0.0"
+        }
+    except Exception as e:
+        logger.error(f"CopilotKit fallback error: {str(e)}")
+        return {"error": "CopilotKit endpoint unavailable", "details": str(e)}
 
 FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
 

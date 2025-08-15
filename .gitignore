@@ -125,12 +125,28 @@ celerybeat.pid
 
 # Environments
 .env
+.env.production
+.env.local
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Logs and temporary files
+*.log
+proxy.log
+agent.log
+server.log
+*.tmp
+*.temp
+
+# Production and test files that shouldn't be committed
+.env.production
+test_*.html
+*-backup.tsx
+requests
 
 # Spyder project settings
 .spyderproject
