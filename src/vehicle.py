@@ -1,11 +1,12 @@
 from crewai import Agent, Crew, Task
-from crewai_tools import SerperDevTool
+# from crewai_tools import SerperDevTool  # Temporarily disabled
 from langchain_openai import ChatOpenAI
 
 
 async def agent():
     # Vehicle search and analysis agent
-    search_tool = SerperDevTool()
+    # search_tool = SerperDevTool()  # Temporarily disabled
+    search_tool = []  # No tools for now
     
     vehicle_expert = Agent(
         role="Automotive Expert",
@@ -20,7 +21,7 @@ async def agent():
         
         You help customers find the perfect vehicle by understanding their needs,
         budget, and preferences. You provide honest, unbiased recommendations.""",
-        tools=[search_tool],
+        tools=search_tool,  # Empty list for now
         llm=ChatOpenAI(model="gpt-4", temperature=0.7),
         verbose=True,
     )
@@ -37,7 +38,7 @@ async def agent():
         - Best times to buy
         
         You help customers understand if they're getting a good deal.""",
-        tools=[search_tool],
+        tools=search_tool,  # Empty list for now
         llm=ChatOpenAI(model="gpt-4", temperature=0.7),
         verbose=True,
     )

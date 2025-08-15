@@ -1,11 +1,12 @@
 from crewai import Agent, Crew, Task
-from crewai_tools import SerperDevTool
+# from crewai_tools import SerperDevTool  # Temporarily disabled
 from langchain_openai import ChatOpenAI
 
 
 async def agent():
     # Dealer search and connection agent
-    search_tool = SerperDevTool()
+    # search_tool = SerperDevTool()  # Temporarily disabled
+    search_tool = []  # No tools for now
     
     dealer_finder = Agent(
         role="Dealer Relationship Manager",
@@ -20,7 +21,7 @@ async def agent():
         
         You maintain relationships with dealers across the country and know their
         strengths, specialties, and customer satisfaction records.""",
-        tools=[search_tool],
+        tools=search_tool,  # Empty list for now
         llm=ChatOpenAI(model="gpt-4", temperature=0.7),
         verbose=True,
     )
@@ -37,7 +38,7 @@ async def agent():
         
         You understand dealer hours, availability, and can help customers
         prepare for their dealership visit.""",
-        tools=[search_tool],
+        tools=search_tool,  # Empty list for now
         llm=ChatOpenAI(model="gpt-4", temperature=0.7),
         verbose=True,
     )
